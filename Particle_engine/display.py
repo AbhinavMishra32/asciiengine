@@ -1,6 +1,7 @@
 import time
 import os
 from particle import Particle
+from typing import List
 
 class Display:
     def __init__(self, x: int, y: int):
@@ -21,10 +22,18 @@ class Display:
         self.canvas = [[self._default_values for _ in range(self.x)] for _ in range(self.y)]
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def run(self, fps: int, particle: Particle):
-        while(True):
+    def run(self, fps: int, particles: List[Particle]):
+        while True:
             self.clear()
-            particle.move()
-            particle.update()
+            for particle in particles:
+                particle.move()
+                particle.check_collisions()
+                particle.update()
             self.display()
             time.sleep(1/fps)
+
+            # self.clear()
+            # particle.move()
+            # particle.update()
+            # self.display()
+            # time.sleep(1/fps)
