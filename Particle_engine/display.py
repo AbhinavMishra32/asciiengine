@@ -30,9 +30,3 @@ class Display:
                 particle.update()
             self.display()
             time.sleep(1/fps)
-
-            # self.clear()
-            # particle.move()
-            # particle.update()
-            # self.display()
-            # time.sleep(1/fps)
