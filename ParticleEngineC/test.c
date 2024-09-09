@@ -1,27 +1,72 @@
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
+
+struct SnakePart {
+    int x, y;
+    struct SnakePart *next;
+};
+
+// Function to move the snake
+void moveSnake(struct SnakePart *head, int dx, int dy) {
+    // Save the head's current position
+    int prevX = head->x;
+    int prevY = head->y;
+
+    // Move the head
+    head->x += dx;
+    head->y += dy;
+
+    // Move the rest of the body
+    struct SnakePart *current = head->next;
+    while (current != NULL) {
+        int tempX = current->x;
+        int tempY = current->y;
+
+        current->x = prevX;
+        current->y = prevY;
+
+        prevX = tempX;
+        prevY = tempY;
+
+        current = current->next;
+    }
+}
+
+// Function to print the snake
+void printSnake(struct SnakePart *head) {
+    struct SnakePart *current = head;
+    while (current != NULL) {
+        printf("Part at (%d, %d)\n", current->x, current->y);
+        current = current->next;
+    }
+}
 
 int main() {
-    int choice;
+    // Initialize snake with 3 parts
+    struct SnakePart *head = malloc(sizeof(struct SnakePart));
+    struct SnakePart *second = malloc(sizeof(struct SnakePart));
+    struct SnakePart *third = malloc(sizeof(struct SnakePart));
 
-    printf("1. Rock\n2. Paper\n3. Scissors");
-    scanf("%d", &choice);
+    head->x = 5; head->y = 5; head->next = second;
+    second->x = 5; second->y = 6; second->next = third;
+    third->x = 5; third->y = 7; third->next = NULL;
 
-    while (choice< 1 || choice> 3){
-        printf("Invalid choice. Please enter a valid choice:");
-        scanf("%d", &choice);
-    }
-    printf("You chose: %d", choice);
+    // Print initial snake position
+    printf("Initial snake position:\n");
+    printSnake(head);
 
-    printf("\nComputer is choosing...");
-    fflush(stdout);
-    sleep(2);
+    // Move the snake (for example, up with dx=0, dy=-1)
+    moveSnake(head, 0, -1);
 
+    // Print new snake position
+    printf("\nAfter moving up:\n");
+    printSnake(head);
 
-    int a[10] = {1,2,3,4,5,6,7,8,9,10};
+    // Free allocated memory
+    free(third);
+    free(second);
+    free(head);
 
     return 0;
 }
 
-void rem(int *a, int n, int index){
-}
