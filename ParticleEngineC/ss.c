@@ -64,7 +64,7 @@ void drawSnake(){
     board[snake.part[0].y*COLS + snake.part[0].x] = '@';
 }
 
-void moveBody(int deltaX, int deltaY){
+void moveBody(){
 
     for(int i = snake.length-1; i>0; i--){
         snake.part[i] = snake.part[i-1];
@@ -75,10 +75,10 @@ void moveBody(int deltaX, int deltaY){
 
 void updateSnake(struct SnakePart* snakeHead){
     switch(snakeHead->dir[0]){
-        case 'u' : snakeHead->y -=1; moveBody(0,-1); break;
-        case 'd' : snakeHead->y +=1; moveBody(0,1); break;
-        case 'l' : snakeHead->x -=1; moveBody(-1,0); break;
-        case 'r' : snakeHead->x +=1; moveBody(1,0); break;
+        case 'u' : snakeHead->y -=1; break;
+        case 'd' : snakeHead->y +=1; break;
+        case 'l' : snakeHead->x -=1; break;
+        case 'r' : snakeHead->x +=1; break;
     }
 }
 
