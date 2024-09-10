@@ -64,25 +64,34 @@ void drawSnake(){
     board[snake.part[0].y*COLS + snake.part[0].x] = '@';
 }
 
-void moveSnake(int deltaX, int deltaY){
+void moveBody(int deltaX, int deltaY){
 
     for(int i = snake.length-1; i>0; i--){
         snake.part[i] = snake.part[i-1];
     }
-    snake.part[0].x += deltaX; // set this equal to the global head position which is increasing every frame based on what button was pressed 
-    // meaning the dx will increase every frame if last button was w
-    snake.part[0].y += deltaY;
+    /*snake.part[0].x += deltaX;*/
+    /*snake.part[0].y += deltaY;*/
 }
 
 void updateSnake(struct SnakePart* snakeHead){
     switch(snakeHead->dir[0]){
-        case 'u' : snakeHead->y -=1; break;
-        case 'd' : snakeHead->y +=1; break;
-        case 'l' : snakeHead->x -=1; break;
-        case 'r' : snakeHead->x +=1; break;
+        case 'u' : snakeHead->y -=1; moveBody(0,-1); break;
+        case 'd' : snakeHead->y +=1; moveBody(0,1); break;
+        case 'l' : snakeHead->x -=1; moveBody(-1,0); break;
+        case 'r' : snakeHead->x +=1; moveBody(1,0); break;
     }
-    if (snakeHead->x == COLS || snakeHead->y == ROWS)
-        isGame
+}
+
+void checkCollision(){
+    if (snake.part[0].x < 0 || snake.part[0].x >= COLS-1 ||
+        snake.part[0].y < 0 || snake.part[0].y >= ROWS-1) {
+        isGameOver = 1;
+    }
+    for(int i = 1; i< snake.length; i++){
+        if (snake.part[0].x == snake.part[i].x && snake.part[0].y == snake.part[i].y){
+            isGameOver = 1;
+        }
+    }
 }
 
 void readKeyboard(struct SnakePart* snakeHead){
@@ -115,18 +124,18 @@ int main(int argc, char **argv){
     snake.length = 10;
     snake.part[0].x = 5;
     snake.part[0].y = 5;
+    snake.part[0].dir[0] = 'r';
 
     setRawMode();
-    int c;
 
-    while(!isGameOver ||( c = getchar()) != 'q'){
+    while(!isGameOver){
         usleep(50000);
         fillBoard();
+        checkCollision();
         drawSnake();
         printBoard();
         readKeyboard(&snake.part[0]);
         updateSnake(&snake.part[0]);
-
     }
     resetMode();
 
