@@ -1,14 +1,35 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>
-#include <windows.h>
+#include <unistd.h>
+#include <termios.h>
+#include <fcntl.h>
 
 #define COLS 40
 #define ROWS 20
+#define SNAKE_MAX_LEN 256
 
 char board[COLS * ROWS];
 
 int isGameOver = 0;
+
+void setRawMode() {
+    struct termios term;
+    tcgetattr(STDIN_FILENO, &term);  
+    term.c_lflag &= ~(ICANON | ECHO); 
+    tcsetattr(STDIN_FILENO, TCSANOW, &term); 
+
+    // Make stdin non-blocking
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+}
+
+
+void resetMode() {
+    struct termios term;
+    tcgetattr(STDIN_FILENO, &term);
+    term.c_lflag |= ICANON | ECHO;  // Enable canonical mode and echo
+    tcsetattr(STDIN_FILENO, TCSANOW, &term);
+}
 
 void fillBoard(){
     int x,y;
@@ -24,74 +45,90 @@ void fillBoard(){
     }
 }
 
-int snakeX = 5;
-int snakeY = 5;
-
-int points = 3;
-
-struct SBody {
-    int x, y;
-    struct SBody* next;
+struct SnakePart{
+    int x,y;
+    char dir[2];
 };
 
-void addBody(struct SBody* head){
-    struct SBody* current = head;
-    while(current->next != NULL){
-        current = current->next;
-    }
-    struct SBody* newBody = (struct SBody*)malloc(sizeof(struct SBody));
-    newBody->x = current->x;
-    newBody->y = current->y;
-    newBody->next = NULL;
-    current->next = newBody;
+struct Snake snake;
 
-    points++;
-}
+struct Snake{
+    int length;
+    struct SnakePart part[SNAKE_MAX_LEN];
+};
 
 void drawSnake(){
-    board[snakeY*COLS + snakeX] = '@';
+    for(int i =snake.length; i>0; i--){
+        board[snake.part[i].y*COLS + snake.part[i].x] = '*';
+    }
+    board[snake.part[0].y*COLS + snake.part[0].x] = '@';
 }
 
 void moveSnake(int deltaX, int deltaY){
-    snakeX += deltaX;
-    snakeY += deltaY;
+
+    for(int i = snake.length-1; i>0; i--){
+        snake.part[i] = snake.part[i-1];
+    }
+    snake.part[0].x += deltaX; // set this equal to the global head position which is increasing every frame based on what button was pressed 
+    // meaning the dx will increase every frame if last button was w
+    snake.part[0].y += deltaY;
 }
 
-void readKeyboard(){
-    int ch = _getch();
+void updateSnake(struct SnakePart* snakeHead){
+    switch(snakeHead->dir[0]){
+        case 'u' : snakeHead->y -=1; break;
+        case 'd' : snakeHead->y +=1; break;
+        case 'l' : snakeHead->x -=1; break;
+        case 'r' : snakeHead->x +=1; break;
+    }
+    if (snakeHead->x == COLS || snakeHead->y == ROWS)
+        isGame
+}
+
+void readKeyboard(struct SnakePart* snakeHead){
+    int ch = getchar();
     if(ch == 27){
 
     }else {
         switch(ch){
-            case 'w': moveSnake(0, -1); break;
-            case 's': moveSnake(0, 1); break;
-            case 'a': moveSnake(-1, 0); break;
-            case 'd': moveSnake(1, 0); break;
+            case 'w' : snakeHead->dir[0] = 'u'; break;
+            case 's' : snakeHead->dir[0] = 'd'; break;
+            case 'a' : snakeHead->dir[0]= 'l'; break;
+            case 'd' : snakeHead->dir[0]= 'r'; break;
         }
     }
 }
 
 void printBoard(){
-    system("cls");
+    system("clear");
     int x,y;
     for(y=0; y<ROWS; y++){
         for(x =0; x<COLS; x++){
-            _putch(board[y*COLS + x]);
+            putchar(board[y*COLS + x]);
         }
-        _putch('\n');
+        putchar('\n');
     }
 }
 
 int main(int argc, char **argv){
 
-    while(!isGameOver){
-        Sleep(100);
+    snake.length = 10;
+    snake.part[0].x = 5;
+    snake.part[0].y = 5;
+
+    setRawMode();
+    int c;
+
+    while(!isGameOver ||( c = getchar()) != 'q'){
+        usleep(50000);
         fillBoard();
         drawSnake();
         printBoard();
-        readKeyboard();
+        readKeyboard(&snake.part[0]);
+        updateSnake(&snake.part[0]);
 
     }
+    resetMode();
 
     return 0;
 }
