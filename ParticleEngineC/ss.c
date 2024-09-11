@@ -58,23 +58,31 @@ void fillBoard(){
         }
     }
     static int foodCounter = 0;
-    foodCounter++;
-    if (foodCounter >= 100) {
-        int foodX = rand() % (COLS - 2) + 1;
-        int foodY = rand() % (ROWS - 2) + 1;
+    static int foodX = -1;
+    static int foodY = -1;
+    static int foodPresent = 0;
+
+    if (foodPresent){
         board[foodY * COLS + foodX] = 'O';
-        if (snake.part[0].x == foodX && snake.part[0].y == foodY) {
-            snake.length++;
+    }
+
+    foodCounter++;
+    if (foodCounter >= 100 && !foodPresent) {
+            foodX = rand() % (COLS - 2) + 1;
+            foodY = rand() % (ROWS - 2) + 1;
+            board[foodY * COLS + foodX] = 'O';
+            foodPresent = 1;
             foodCounter = 0;
-        }
+    }
+    if (snake.part[0].x == foodX && snake.part[0].y == foodY) {
+        snake.length++;
+        foodPresent = 0;
     }
 }
-
 void drawSnake(){
-    for(int i =snake.length; i>0; i--){
-        board[snake.part[i].y*COLS + snake.part[i].x] = '*';
+    for (int i = 0; i < snake.length; i++) {
+        board[snake.part[i].y * COLS + snake.part[i].x] = (i == 0) ? '@' : '*';
     }
-    board[snake.part[0].y*COLS + snake.part[0].x] = '@';
 }
 
 void moveBody(){
@@ -158,7 +166,7 @@ int main(int argc, char **argv){
     snake.part[0].dir[0] = 'r';
     snake.part[0].prevDir = 'r';
 
-    for (int i = 1; i < snake.length; i++) {
+    for (int i = 0; i < snake.length; i++) {
         snake.part[i].x = snake.part[0].x - i;
         snake.part[i].y = snake.part[0].y;
         snake.part[i].dir[0] = 'r';
@@ -174,6 +182,7 @@ int main(int argc, char **argv){
         printBoard();
         readKeyboard(&snake.part[0]);
         updateSnake();
+        printf("Snake length: %d\n", snake.length);
         checkCollision();
     }
     resetMode();
