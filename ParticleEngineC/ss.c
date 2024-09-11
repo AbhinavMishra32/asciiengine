@@ -23,7 +23,6 @@ void setRawMode() {
     fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
 
-
 void resetMode() {
     struct termios term;
     tcgetattr(STDIN_FILENO, &term);
@@ -69,16 +68,17 @@ void moveBody(){
     for(int i = snake.length-1; i>0; i--){
         snake.part[i] = snake.part[i-1];
     }
-    /*snake.part[0].x += deltaX;*/
-    /*snake.part[0].y += deltaY;*/
 }
 
-void updateSnake(struct SnakePart* snakeHead){
-    switch(snakeHead->dir[0]){
-        case 'u' : snakeHead->y -=1; break;
-        case 'd' : snakeHead->y +=1; break;
-        case 'l' : snakeHead->x -=1; break;
-        case 'r' : snakeHead->x +=1; break;
+void updateSnake(){
+    struct SnakePart *snakeHead = &snake.part[0];
+    for(int i = 1; i<snake.length; i++){
+        snake.part[i].dir[0] = snake.part[i-1].dir[0];
+    }
+
+   for(int i = snake.length-1; i>0; i--) {
+        snake.part[i].x = snake.part[i-1].x;
+        snake.part[i].y = snake.part[i-1].y;
     }
 }
 
@@ -121,10 +121,18 @@ void printBoard(){
 
 int main(int argc, char **argv){
 
-    snake.length = 10;
+    snake.length = 5;
     snake.part[0].x = 5;
     snake.part[0].y = 5;
     snake.part[0].dir[0] = 'r';
+
+    int startPos[4] = {1,2,3,4};
+
+    for(int i = 1; i<=4; i++){
+        snake.part[i].x = startPos[i-1];
+        snake.part[i].y = 5;
+        snake.part[i].dir[0] = 'r';
+    }
 
     setRawMode();
 
@@ -135,7 +143,7 @@ int main(int argc, char **argv){
         drawSnake();
         printBoard();
         readKeyboard(&snake.part[0]);
-        updateSnake(&snake.part[0]);
+        updateSnake();
     }
     resetMode();
 
