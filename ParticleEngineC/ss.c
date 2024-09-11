@@ -30,6 +30,21 @@ void resetMode() {
     tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
+struct SnakePart{
+    int x,y;
+    char dir[2];
+    char prevDir;
+};
+
+struct Snake{
+    int length;
+    int totalmoves;
+    struct SnakePart part[SNAKE_MAX_LEN];
+    int startLength;
+};
+
+struct Snake snake;
+
 void fillBoard(){
     int x,y;
     for(y=0; y<ROWS; y++){
@@ -42,21 +57,18 @@ void fillBoard(){
             }
         }
     }
+    static int foodCounter = 0;
+    foodCounter++;
+    if (foodCounter >= 100) {
+        int foodX = rand() % (COLS - 2) + 1;
+        int foodY = rand() % (ROWS - 2) + 1;
+        board[foodY * COLS + foodX] = 'O';
+        if (snake.part[0].x == foodX && snake.part[0].y == foodY) {
+            snake.length++;
+            foodCounter = 0;
+        }
+    }
 }
-
-struct SnakePart{
-    int x,y;
-    char dir[2];
-    char prevDir;
-};
-
-struct Snake snake;
-
-struct Snake{
-    int length;
-    struct SnakePart part[SNAKE_MAX_LEN];
-    int startLength;
-};
 
 void drawSnake(){
     for(int i =snake.length; i>0; i--){
@@ -94,16 +106,21 @@ void updateSnake(){
     snakeHead->prevDir = snakeHead->dir[0];
 }
 
-void checkCollision(){
+void checkCollision() {
     // Border collision
-    if ((snake.part[0].x < 0 || snake.part[0].x >= COLS-1 ||
-        snake.part[0].y < 0 || snake.part[0].y >= ROWS-1) && snake.length > snake.startLength) {
+    if (snake.part[0].x <= 0 || snake.part[0].x >= COLS-1 ||
+        snake.part[0].y <= 0 || snake.part[0].y >= ROWS-1) {
         isGameOver = 1;
+        printf("Game Over: Head collided with border at (%d, %d)\n", snake.part[0].x, snake.part[0].y);
     }
+
     // Self collision
-    for(int i = 1; i< snake.length; i++){
-        if ((snake.part[0].x == snake.part[i].x && snake.part[0].y == snake.part[i].y) && snake.length > snake.startLength){
-            isGameOver = 1;
+    if (snake.length > snake.startLength) { // Only check self-collision after the snake grows
+        for (int i = 1; i < snake.length; i++) {
+            if (snake.part[0].x == snake.part[i].x && snake.part[0].y == snake.part[i].y) {
+                isGameOver = 1;
+                printf("Game Over: Head collided with body at (%d, %d)\n", snake.part[0].x, snake.part[0].y);
+            }
         }
     }
 }
@@ -113,10 +130,10 @@ void readKeyboard(struct SnakePart* snakeHead){
     if(ch == 27){
     } else {
         switch(ch){
-            case 'w': if (snakeHead->prevDir != 'd') snakeHead->dir[0] = 'u'; break;
-            case 's': if (snakeHead->prevDir != 'u') snakeHead->dir[0] = 'd'; break;
-            case 'a': if (snakeHead->prevDir != 'r') snakeHead->dir[0] = 'l'; break;
-            case 'd': if (snakeHead->prevDir != 'l') snakeHead->dir[0] = 'r'; break;
+            case 'w': if (snakeHead->prevDir != 'd') snakeHead->dir[0] = 'u'; snake.totalmoves++; break;
+            case 's': if (snakeHead->prevDir != 'u') snakeHead->dir[0] = 'd'; snake.totalmoves++; break;
+            case 'a': if (snakeHead->prevDir != 'r') snakeHead->dir[0] = 'l'; snake.totalmoves++; break;
+            case 'd': if (snakeHead->prevDir != 'l') snakeHead->dir[0] = 'r'; snake.totalmoves++; break;
         }
     }
 }
@@ -134,15 +151,14 @@ void printBoard(){
 
 int main(int argc, char **argv){
 
-    snake.length =8;
+    snake.length = 3;
     snake.startLength = snake.length;
     snake.part[0].x = 5;
     snake.part[0].y = 5;
     snake.part[0].dir[0] = 'r';
+    snake.part[0].prevDir = 'r';
 
-    int startPos[] = {-2,-1,0,1,2,3,4,5};
-
-    for(int i = 1; i<=sizeof(startPos)/sizeof(startPos[1]); i++){
+    for (int i = 1; i < snake.length; i++) {
         snake.part[i].x = snake.part[0].x - i;
         snake.part[i].y = snake.part[0].y;
         snake.part[i].dir[0] = 'r';
